@@ -1,8 +1,8 @@
 {
   "name": "ng-emoji-picker",
-  "version": "0.0.1",
-  "location": "https://github.com/mbenford/ngTagsInput-bower",
-  "homepage": "http://mbenford.github.io/ngTagsInput",
+  "version": "0.0.2",
+  "location": "https://github.com/kimooz/ng-emoji-picker",
+  "homepage": "https://github.com/kimooz/ng-emoji-picker",
   "main": [
     "js/nanoscroller.min.js",
     "js/tether.min.js",
