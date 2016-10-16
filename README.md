@@ -1,7 +1,12 @@
-NG Emoji Picker
+Ng Emoji Picker
 ======================
 
-NG Emoji Picker is an angular directive for [Emoji Picker](https://github.com/OneSignal/emoji-picker), with some modifications in the original library.
+Ng Emoji Picker is an angular directive for [Emoji Picker](https://github.com/OneSignal/emoji-picker), with the following modifications:
+
+* **Removing wysiwyg editor Support**
+* **Dynamic location for picker menu**
+* **Moving Emoji images to /assets/images/ng-emoji-picker**
+
 
 Installation
 ------------
@@ -16,11 +21,16 @@ bower install ng-emoji-picker --save
 This will install the latest release.
 
 
+
+
 Usage
 -----
 ```javascript
 angular.module('myApp', ['ngEmojiPicker']);
 ```
+#### Copy Assets:
+clone the img folder and place it in /assets/images/ng-emoji-picker
+
 #### Basic Example:
 ```
 <input emoji-picker type="text" ng-model="chat.message"/>
@@ -29,6 +39,15 @@ angular.module('myApp', ['ngEmojiPicker']);
 #### Full Example
 ```
 <textarea emoji-picker ng-model="chat.message" emoji-attachment-location="bottom right" emoji-menu-location="top left" ng-keydown='handleKeyDown($event)'></textarea>
+```
+#### Style the emoji picker
+Just add the following css 
+```
+ .emoji-picker-icon{
+    font-size:20px;
+    right: 86px;
+    top: 17px;
+  }
 ```
 
 #### Options:
