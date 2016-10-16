@@ -659,9 +659,9 @@
   };
 
 
-  var emojiPicker = angular.module('emojiPicker', []);
+  var ngEmojiPicker = angular.module('ngEmojiPicker', []);
 
-	emojiPicker.directive('emojiPicker',function($parse){
+	ngEmojiPicker.directive('emojiPicker',function($parse){
 	  return{
 	    link: function(scope, element, attrs){
 	      console.log(attrs)
