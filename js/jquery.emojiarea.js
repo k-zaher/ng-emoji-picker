@@ -1,3 +1,4 @@
+// Original Liscense
 /**
  * emojiarea - A rich textarea control that supports emojis, WYSIWYG-style.
  * Copyright (c) 2012 DIY Co
@@ -39,6 +40,8 @@
 	$.emojiarea = {
 		assetsPath : '',
 		iconSize : 25,
+		emojiAttachmentLocation: "bottom right",
+		emojiMenuLocation: "top left",
 		icons : {},
 	};
 	var defaultRecentEmojis = ':joy:,:kissing_heart:,:heart:,:heart_eyes:,:blush:,:grin:,:+1:,:relaxed:,:pensive:,:smile:,:sob:,:kiss:,:unamused:,:flushed:,:stuck_out_tongue_winking_eye:,:see_no_evil:,:wink:,:smiley:,:cry:,:stuck_out_tongue_closed_eyes:,:scream:,:rage:,:smirk:,:disappointed:,:sweat_smile:,:kissing_closed_eyes:,:speak_no_evil:,:relieved:,:grinning:,:yum:,:laughing:,:ok_hand:,:neutral_face:,:confused:'
@@ -47,17 +50,12 @@
 
 	$.fn.emojiarea = function(options) {
 		options = $.extend({}, options);
+		console.log(options);
 		return this
 			.each(function () {
 				var originalInput = $(this);
-				if ('contentEditable' in document.body
-					&& options.wysiwyg !== false) {
-					var id = getGuid();
-					new EmojiArea_WYSIWYG(originalInput, id, $.extend({}, options));
-				} else {
-					var id = getGuid();
-					new EmojiArea_Plain(originalInput, id, options);
-				}
+				var id = getGuid();
+				new EmojiArea_Plain(originalInput, id, options);
 				originalInput.attr(
 					{
 						'data-emojiable': 'converted',
@@ -155,7 +153,6 @@
 			el.selectionStart = el.selectionEnd = startIndex + text.length;
 		} else if (typeof document.selection != 'undefined'
 				&& typeof document.selection.createRange != 'undefined') {
-			el.focus();
 			range = document.selection.createRange();
 			range.text = text;
 			range.select();
@@ -218,13 +215,6 @@
 
 	EmojiArea.prototype.setup = function() {
 		var self = this;
-
-		this.$editor.on('focus', function() {
-			self.hasFocus = true;
-		});
-		this.$editor.on('blur', function() {
-			self.hasFocus = false;
-		});
 
     // Assign a unique instance of an emojiMenu to
     self.emojiMenu = new EmojiMenu(self);
@@ -289,60 +279,11 @@
 	var EmojiArea_Plain = function($textarea, id, options) {
 		this.options = options;
 		this.$textarea = $textarea;
+		this.options.inputMethod = 'unicode';
+    this.emojiPopup = options.emojiPopup;
 		this.$editor = $textarea;
     this.id = id;
-		this.setup();
-	};
 
-	EmojiArea_Plain.prototype.insert = function(emoji) {
-		if (!$.emojiarea.icons.hasOwnProperty(emoji))
-			return;
-		util.insertAtCursor(emoji, this.$textarea[0]);
-		/*
-		 * MODIFICATION: Following line was added by Igor Zhukov, in order to
-		 * save recent emojis
-		 */
-		util.emojiInserted(emoji, this.menu);
-		this.$textarea.trigger('change');
-	};
-
-	EmojiArea_Plain.prototype.val = function() {
-		if (this.$textarea == '\n')
-			return '';
-		return this.$textarea.val();
-	};
-
-	util.extend(EmojiArea_Plain.prototype, EmojiArea.prototype);
-
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-	/**
-	 * Editor (rich)
-	 * 
-	 * @constructor
-	 * @param {object}
-	 *            $textarea
-	 * @param {object}
-	 *            options
-	 */
-
-	var EmojiArea_WYSIWYG = function($textarea, id, options) {
-		var self = this;
-
-		this.options = options || {};
-		if ($($textarea).attr('data-emoji-input') === 'unicode')
-			this.options.inputMethod = 'unicode';
-		else
-			this.options.inputMethod = 'image';
-    this.id = id;
-		this.$textarea = $textarea;
-    this.emojiPopup = options.emojiPopup;
-		this.$editor = $('<div>').addClass('emoji-wysiwyg-editor').addClass($($textarea)[0].className);
-    this.$editor.data('self', this);
-
-    if ($textarea.attr('maxlength')) {
-      this.$editor.attr('maxlength', $textarea.attr('maxlength'));
-    }
     var unicodeToImageText = this.emojiPopup.unicodeToImage($textarea.val());
 		this.$editor.html(unicodeToImageText);
 		this.$editor.attr({
@@ -352,25 +293,11 @@
 			'contenteditable': 'true',
 		});
 
-		/*
-		 * ! MODIFICATION START Following code was modified by Igor Zhukov, in
-		 * order to improve rich text paste
-		 */
-		var changeEvents = 'blur change';
+	var changeEvents = 'blur change';
 		if (!this.options.norealTime) {
 			changeEvents += ' keyup';
 		}
-		this.$editor.on(changeEvents, function(e) {
-			return self.onChange.apply(self, [ e ]);
-		});
 		/* ! MODIFICATION END */
-
-		this.$editor.on('mousedown focus', function() {
-			document.execCommand('enableObjectResizing', false, false);
-		});
-		this.$editor.on('blur', function() {
-			document.execCommand('enableObjectResizing', true, true);
-		});
 
     var editorDiv = this.$editor;
 		this.$editor.on("change keydown keyup resize scroll", function(e) {
@@ -381,7 +308,6 @@
       {
         e.preventDefault();
       }
-      self.updateBodyPadding(editorDiv);
     });
 
 		if (this.options.onPaste) {
@@ -405,129 +331,36 @@
 
     $textarea.after("<i class='emoji-picker-icon emoji-picker " + this.options.popupButtonClasses + "' data-id='" + id + "' data-type='picker'></i>");
 
-		$textarea.hide().after(this.$editor);
+
 		this.setup();
-
-		/*
-		 * MODIFICATION: Following line was modified by Igor Zhukov, in order to
-		 * improve emoji insert behaviour
-		 */
-		$(document.body).on('mousedown', function() {
-			if (self.hasFocus) {
-				self.selection = util.saveSelection();
-			}
-		});
 	};
 
-  EmojiArea_WYSIWYG.prototype.updateBodyPadding = function(target) {
-    var emojiPicker = $('[data-id=' + this.id + '][data-type=picker]');
-    if ($(target).hasScrollbar()) {
-      if (!(emojiPicker.hasClass('parent-has-scroll')))
-        emojiPicker.addClass('parent-has-scroll');
-      if (!($(target).hasClass('parent-has-scroll')))
-        $(target).addClass('parent-has-scroll');
-    } else {
-      if ((emojiPicker.hasClass('parent-has-scroll')))
-        emojiPicker.removeClass('parent-has-scroll');
-      if (($(target).hasClass('parent-has-scroll')))
-        $(target).removeClass('parent-has-scroll');
-    }
-  };
-
-	EmojiArea_WYSIWYG.prototype.onChange = function(e) {
-		this.$textarea.val(this.val()).trigger('change');
-	};
-
-	EmojiArea_WYSIWYG.prototype.insert = function(emoji) {
+	EmojiArea_Plain.prototype.insert = function(emoji) {
 		var content;
 		/*
 		 * MODIFICATION: Following line was modified by Andre Staltz, to use new
 		 * implementation of createIcon function.
 		 */
 		var insertionContent = '';
-		if (this.options.inputMethod == 'unicode') {
-			insertionContent = this.emojiPopup.colonToUnicode(emoji);
-		} else {
-			var $img = $(EmojiArea.createIcon($.emojiarea.icons[emoji]));
-			if ($img[0].attachEvent) {
-				$img[0].attachEvent('onresizestart', function(e) {
-					e.returnValue = false;
-				}, false);
-			}
-			insertionContent = $img[0];
-		}
-
-		this.$editor.trigger('focus');
-		if (this.selection) {
-			util.restoreSelection(this.selection);
-		}
-		try {
-			util.replaceSelection(insertionContent);
-		} catch (e) {
-		}
-
+		insertionContent = this.emojiPopup.colonToUnicode(emoji);
+		util.insertAtCursor(insertionContent, this.$textarea[0]);
 		/*
 		 * MODIFICATION: Following line was added by Igor Zhukov, in order to
 		 * save recent emojis
 		 */
 		util.emojiInserted(emoji, this.menu);
-
-		this.onChange();
+		this.$textarea.trigger('change');
+		this.$textarea.focus();
 	};
 
-	EmojiArea_WYSIWYG.prototype.val = function() {
-		var lines = [];
-		var line = [];
-    var emojiPopup = this.emojiPopup;
-
-		var flush = function() {
-			lines.push(line.join(''));
-			line = [];
-		};
-
-		var sanitizeNode = function(node) {
-			if (node.nodeType === TEXT_NODE) {
-				line.push(node.nodeValue);
-			} else if (node.nodeType === ELEMENT_NODE) {
-				var tagName = node.tagName.toLowerCase();
-				var isBlock = TAGS_BLOCK.indexOf(tagName) !== -1;
-
-				if (isBlock && line.length)
-					flush();
-
-				if (tagName === 'img') {
-					var alt = node.getAttribute('alt') || '';
-					if (alt) {
-							line.push(alt);
-					}
-					return;
-				} else if (tagName === 'br') {
-					flush();
-				}
-
-				var children = node.childNodes;
-				for (var i = 0; i < children.length; i++) {
-					 sanitizeNode(children[i]);
-				}
-
-				if (isBlock && line.length)
-					flush();
-			}
-		};
-
-		var children = this.$editor[0].childNodes;
-		for (var i = 0; i < children.length; i++) {
-			sanitizeNode(children[i]);
-		}
-
-		if (line.length)
-			flush();
-
-		var returnValue = lines.join('\n');
-    return emojiPopup.colonToUnicode(returnValue);
+	EmojiArea_Plain.prototype.val = function() {
+		if (this.$textarea == '\n')
+			return '';
+		return this.$textarea.val();
 	};
 
-	util.extend(EmojiArea_WYSIWYG.prototype, EmojiArea.prototype);
+	util.extend(EmojiArea_Plain.prototype, EmojiArea.prototype);
+
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -564,7 +397,6 @@
     this.$menu.attr('data-id', self.id);
     this.$menu.attr('data-type', 'menu');
 		this.$menu.hide();
-
 		/*
 		 * ! MODIFICATION START Following code was modified by Igor Zhukov, in
 		 * order to add scrollbars and tail to EmojiMenu Also modified by Andre
@@ -639,18 +471,12 @@
 			self.hide();
 		});
 
-		$window.on('resize', function() {
-			if (self.visible)
-				self.reposition();
-		});
-
 		this.$menu.on('mouseup', 'a', function(e) {
 			e.stopPropagation();
 			return false;
 		});
 
 		this.$menu.on('click', 'a', function(e) {
-      self.emojiarea.updateBodyPadding(self.emojiarea.$editor);
 			/*
 			 * ! MODIFICATION START Following code was modified by Andre Staltz,
 			 * to capture clicks on category tabs and change the category
@@ -787,23 +613,19 @@
 		}0
 	};
 
-	EmojiMenu.prototype.reposition = function() {
-    if (!this.tether) {
-
-      this.tether = new Tether({
-        element: '[data-id="' + this.id + '"][data-type="menu"]',
-        target: '[data-id="' + this.id + '"][data-type="picker"]',
-        attachment: 'left center',
-        targetAttachment: 'bottom left',
-        offset: '0 12px',
-        constraints: [
-          {
-            to: 'html',
-            pin: true
-          }
-        ]
-      });
-    }
+	EmojiMenu.prototype.reposition = function(attachmentLocation,menuLocation) {
+    this.tether = new Tether({
+      element: '[data-id="' + this.id + '"][data-type="menu"]',
+      target: '[data-id="' + this.id + '"][data-type="picker"]',
+      attachment: attachmentLocation,
+      targetAttachment: menuLocation,
+      constraints: [
+        {
+          to: 'html',
+          pin: true
+        }
+      ]
+    });
 	};
 
   EmojiMenu.prototype.hide = function(callback) {
@@ -812,13 +634,14 @@
   };
 
   EmojiMenu.prototype.show = function(emojiarea) {
+  	console.log(emojiarea)
     /*
      * MODIFICATION: Following line was modified by Igor Zhukov, in order to
      * improve EmojiMenu behaviour
      */
     if (this.visible)
       return this.hide();
-    this.reposition();
+    this.reposition(emojiarea.options.emojiAttachmentLocation,emojiarea.options.emojiMenuLocation);
 		$(this.$menu).css('z-index', ++EmojiMenu.menuZIndex);
     this.$menu.show("fast");
     /*
@@ -829,6 +652,36 @@
       this.load(0);
     }
     this.visible = true;
+    this.tether.position()
+    // this.tether.setOptions({enabled: true});
+    // // Repositiong the menu as suggested by http://tether.io/overview/repositioning/
+    // Tether.position();
   };
+
+
+  var emojiPicker = angular.module('emojiPicker', []);
+
+	emojiPicker.directive('emojiPicker',function($parse){
+	  return{
+	    link: function(scope, element, attrs){
+	      console.log(attrs)
+	      var emojiAttachmentLocation = attrs["emojiAttachmentLocation"] || "bottom right";
+	      var emojiMenuLocation = attrs["emojiMenuLocation"] || "top left";
+	      console.log(emojiAttachmentLocation)
+	      console.log(emojiMenuLocation)
+	      window.emojiPicker = new EmojiPicker({
+	        emojiable_selector: '[emoji-picker="emoji-picker"]',
+	        assetsPath: '/assets/images/ng-emoji-picker',
+	        popupButtonClasses: 'fa fa-smile-o',
+	        emojiAttachmentLocation: emojiAttachmentLocation ,
+	        emojiMenuLocation: emojiMenuLocation 
+	      });
+	      // Finds all elements with `emojiable_selector` and converts them to rich emoji input fields
+	      // You may want to delay this step if you have dynamically created input fields that appear later in the loading process
+	      // It can be called as many times as necessary; previously converted input fields will not be converted again
+	      window.emojiPicker.discover();
+	    }
+	  };
+	})
 
 })(jQuery, window, document);
