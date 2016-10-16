@@ -158,13 +158,13 @@ img.emoji {
     display: inline-block;
     width: 24px;
     height: 29px;
-    background: url('/asset/images/ng-emoji-picker/IconsetSmiles.png') no-repeat;
+    background: url('/assets/images/ng-emoji-picker/IconsetSmiles.png') no-repeat;
     background-size: 42px 350px;
     border: 0;
 }
 
 .is_1x .emoji-menu-tabs .emoji-menu-tab {
-    background-image: url('/asset/images/ng-emoji-picker/IconsetSmiles_1x.png');
+    background-image: url('/assets/images/ng-emoji-picker/IconsetSmiles_1x.png');
 }
 
 .emoji-menu-tabs .icon-recent { background-position: -9px -306px; }
