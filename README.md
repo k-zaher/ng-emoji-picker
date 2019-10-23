@@ -59,4 +59,6 @@ Just add the following css
 ### Bugs and feature requests
 If you found a bug or have an idea feel free [to open a new issue](https://github.com/kimooz/ng-emoji-picker/issues/new).
 
+### License
+ng-emoji-picker is released under the MIT license.
 ```
