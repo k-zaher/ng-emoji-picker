@@ -50,6 +50,7 @@
 
 	$.fn.emojiarea = function(options) {
 		options = $.extend({}, options);
+		this.push($("#emoji-area")); //assigning emoji area to this , to show emoji-picker
 		console.log(options);
 		return this
 			.each(function () {
